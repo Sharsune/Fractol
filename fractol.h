@@ -13,8 +13,8 @@
 #ifndef FRACTOL_H
 # define FRACTOL_H
 
-#include <mlx.h>
-#include <math.h>
+# include <mlx.h>
+# include "libft/libft.h"
 
 enum e_keys
 {
@@ -25,24 +25,12 @@ enum e_keys
 	RIGHT = 124
 };
 
-typedef struct {
-    double r;       
-    double g;       
-    double b;       
-} rgb;
-
-typedef struct {
-    double h;       
-    double s;       
-    double v;       
-} hsv;
-
 struct s_zoom
 {
-	double x_factor;
-	double y_factor;
-	double x_c;
-	double y_c;
+	double	x_factor;
+	double	y_factor;
+	double	x_c;
+	double	y_c;
 };
 
 struct s_coordinates
@@ -55,7 +43,7 @@ struct s_coordinates
 	double	im_factor;
 };
 
-struct	s_data 
+struct	s_data
 {
 	void	*img;
 	char	*addr;
@@ -66,8 +54,8 @@ struct	s_data
 
 struct	s_mlx
 {
-	void *mlx_ptr;
-	void *win_ptr;
+	void	*mlx_ptr;
+	void	*win_ptr;
 };
 
 typedef struct s_fractal
@@ -75,6 +63,8 @@ typedef struct s_fractal
 	unsigned int			width;
 	unsigned int			height;
 	unsigned int			max_iterations;
+	int						argc;
+	char					**argv;
 	double					c_re;
 	double					c_im;
 	double					z_re;
@@ -83,25 +73,35 @@ typedef struct s_fractal
 	double					z_im2;
 	double					j_re;
 	double					j_im;
-	struct s_coordinates 	grid;
+	double					zoom_multiply;
+	struct s_coordinates	grid;
 	struct s_mlx			mlx;
 	struct s_data			img;
 	struct s_zoom			zoom;
 }	t_fractal;
 
-void	initialize_numbers(t_fractal *vars);
+void	start_mlx(t_fractal *vars);
+void	error_exit(void);
+void	check_argv(t_fractal *vars);
+void	check_digits(const char *str);
+double	ft_atof(const char *str);
+double	after_dot(const char *str, int i, int sign, int result);
+void	initialize_mandelbrot(t_fractal *vars);
 void	initialize_zoom(t_fractal *vars, int x, int y);
-void	initialize_julia_set(t_fractal *vars);
-void	my_mlx_pixel_put(t_fractal *vars, unsigned int x, unsigned int y, int color);
-int		make_offset_color(t_fractal *vars, unsigned int n);
-int		mandelbrot_set(t_fractal *vars);
-int		julia_set(t_fractal *vars);
-int		close(void *param);
+void	initialize_julia(t_fractal *vars);
+void	my_mlx_pixel_put(t_fractal *vars, unsigned int x, \
+unsigned int y, int *color);
+void	make_colors(unsigned char *colors, int inside, unsigned int n);
+void	mandelbrot_set(t_fractal *vars);
+void	julia_set(t_fractal *vars);
+void	inner_loop(t_fractal *vars, unsigned int *n, int *inside);
+int		close_window(void *param);
 int		key_deal(int keycode, void *param);
 int		move_up(void *param);
 int		move_down(void *param);
-int 	move_right(void *param);
+int		move_right(void *param);
 int		move_left(void *param);
-int		mouse_scroll(int keycode, int x, int y, t_fractal *vars);
-void 	hsv_to_rgb(double h, double s, double v, int* r, int* g, int* b);
-# endif
+void	zoom_in(t_fractal *vars);
+void	zoom_out(t_fractal *vars);
+int		mouse_scroll(int keycode, int x, int y, void *param);
+#endif

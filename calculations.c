@@ -12,72 +12,101 @@
 
 #include "fractol.h"
 
-void	initialize_zoom(t_fractal *vars, int x, int y)
+void	initialize_mandelbrot(t_fractal *vars)
 {
-	vars->zoom.x_factor = (vars->grid.maxre - vars->grid.minre) / (vars->width - 1);
-	vars->zoom.y_factor = (vars->grid.maxim - vars->grid.minim) / (vars->height - 1);
-	vars->zoom.x_c = vars->grid.minre + vars->width * vars->zoom.x_factor;
-	vars->zoom.y_c = vars->grid.maxim - vars->height * vars->zoom.y_factor;
-	vars->zoom.x_c = vars->grid.minre + x * vars->zoom.x_factor;
-	vars->zoom.y_c = vars->grid.maxim - y * vars->zoom.y_factor;
+	vars->grid.minre = -2.0;
+	vars->grid.maxre = 1.0;
+	vars->grid.minim = -1.2;
+	vars->grid.maxim = vars->grid.minim + (vars->grid.maxre - vars->grid.minre) \
+	* vars->height / vars->width;
+	vars->grid.re_factor = (vars->grid.maxre - vars->grid.minre) \
+	/ (vars->width - 1);
+	vars->grid.im_factor = (vars->grid.maxim - vars->grid.minim) \
+	/ (vars->height - 1);
+	vars->max_iterations = 50;
+	vars->zoom_multiply = 1.0;
 }
 
-void	initialize_julia_set(t_fractal *vars)
+void	initialize_julia(t_fractal *vars)
 {
 	vars->grid.minre = -2.0;
 	vars->grid.maxre = 2.0;
 	vars->grid.minim = -2;
 	vars->grid.maxim = 2.0;
-	vars->grid.re_factor = (vars->grid.maxre - vars->grid.minre) / (vars->width - 1);
-	vars->grid.im_factor = (vars->grid.maxim - vars->grid.minim) / (vars->height - 1);
+	vars->grid.re_factor = (vars->grid.maxre - vars->grid.minre) \
+	/ (vars->width - 1);
+	vars->grid.im_factor = (vars->grid.maxim - vars->grid.minim) \
+	/ (vars->height - 1);
 	vars->max_iterations = 50;
-	vars->j_re = -0.835;
-	vars->j_im = -0.2321;
+	if (vars->argc == 2)
+	{
+		vars->j_re = -0.835;
+		vars->j_im = -0.2321;
+	}
+	else
+	{
+		vars->j_re = ft_atof(vars->argv[2]);
+		vars->j_im = ft_atof(vars->argv[3]);
+	}
 	vars->c_im = vars->j_im;
 	vars->c_re = vars->j_re;
+	vars->zoom_multiply = 1.0;
 }
 
-int	julia_set(t_fractal *vars)
+void	inner_loop(t_fractal *vars, unsigned int *n, int *inside)
 {
-	unsigned int	y;
-	unsigned int	x;
-	unsigned int	n;
-	int	inside;
-
-	y = 0;
-	x = 0;
-	n = 0;
-	inside = 0;
-	//initialize_julia_set(vars);
-	while(y < vars->height)
+	while (*n < vars->max_iterations)
 	{
-		x = 0;
-		while(x < vars->width)
+		vars->z_re2 = vars->z_re * vars->z_re;
+		vars->z_im2 = vars->z_im * vars->z_im;
+		if (vars->z_re2 + vars->z_im2 > 4)
 		{
-			vars->z_re = vars->grid.minre + x * vars->grid.re_factor;
-			vars->z_im = vars->grid.maxim - y * vars->grid.im_factor;
-			inside = 1;
-			n = 0;
-			while(n < vars->max_iterations)
-			{
-				vars->z_re2 = vars->z_re * vars->z_re;
-				vars->z_im2 = vars->z_im * vars->z_im;
-				if (vars->z_re2 + vars->z_im2 > 4)
-				{
-					inside = 2;
-					break;
-				}
-				vars->z_im = 2 * vars->z_re * vars->z_im + vars->c_im;
-				vars->z_re = vars->z_re2 - vars->z_im2 + vars->c_re;
-				n++;
-			}
-			if(inside == 1)
-				my_mlx_pixel_put(vars, x, y, 0x00000000);
-			if(inside == 2)
-				my_mlx_pixel_put(vars, x, y, make_offset_color(vars, n));
-			x++;
+			*inside = 2;
+			break ;
 		}
-		y++;
+		vars->z_im = 2 * vars->z_re * vars->z_im + vars->c_im;
+		vars->z_re = vars->z_re2 - vars->z_im2 + vars->c_re;
+		(*n)++;
 	}
-	return (0);
+}
+
+double	ft_atof(const char *str)
+{
+	double	result;
+	double	power;
+	int		i;
+	int		sign;
+
+	result = 0.0;
+	power = 1.0;
+	i = 0;
+	sign = 1;
+	while (ft_isspace(str[i]))
+		i++;
+	if (str[i] == '-')
+		sign = -1;
+	if (str[i] == '+' || str[i] == '-')
+		i++;
+	while (ft_isdigit(str[i]))
+	{
+		result = 10.0 * result + (str[i] - '0');
+		i++;
+	}
+	if (str[i] == '.')
+		i++;
+	return (after_dot(str, i, sign, result));
+}
+
+double	after_dot(const char *str, int i, int sign, int result)
+{
+	double	power;
+
+	power = 1.0;
+	while (ft_isdigit(str[i]))
+	{
+		result = 10.0 * result + (str[i] - '0');
+		power *= 10.0;
+		i++;
+	}
+	return (sign * result / power);
 }
